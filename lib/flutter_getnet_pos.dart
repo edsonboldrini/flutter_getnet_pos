@@ -36,6 +36,14 @@ class FlutterGetnetPos {
         'printBarcode': printBarcode,
       });
 
+  /// Print a line using align given.
+  static Future<void> printLine(String line,
+          {int align = GetNetPrinterAttributes.VAL_ALIGN_LEFT}) async =>
+      await methodChannel.invokeMethod('printLine', {
+        'list': line,
+        'align': align,
+      });
+
   /// Returns the card serial number from Mifare
   static Future<String> getMifareCardSN() async =>
       await methodChannel.invokeMethod('getMifare');
@@ -53,4 +61,10 @@ class FlutterGetnetPos {
     var initiated = await methodChannel.invokeMethod('check');
     return "$label: ${initiated ? trueMessage : falseMessage}";
   }
+}
+
+class GetNetPrinterAttributes {
+  static const VAL_ALIGN_LEFT = 0;
+  static const VAL_ALIGN_CENTER = 1;
+  static const VAL_ALIGN_RIGHT = 2;
 }

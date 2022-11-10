@@ -46,6 +46,8 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	private static final String BARCODE_PATTERN = "barcodePattern";
 	private static final String PRINT_BARCODE = "printBarcode";
 	private static final String LIST = "list";
+	private static final String LINE = "line";
+	private static final String ALIGN = "align";
 	private Context context;
 
 	@Override
@@ -68,6 +70,10 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 			}
 			case "print": {
 				print(call, result);
+				break;
+			}
+			case "printLine": {
+				printLine(call, result);
 				break;
 			}
 			case "getMifare": {
@@ -206,6 +212,37 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	}
 
 	/**
+	 * Print line
+	 *
+	 * @param call   - method call
+	 * @param result - result callback
+	 */
+	private void printLine(final MethodCall call, final Result result) {
+		ensureInitialized(new Callback() {
+			@Override
+			public void performAction() {
+				String line = call.argument(LINE);
+				int align = call.argument(ALIGN);
+				if (line != null) {
+					try {
+						addLineToPrinter(line, align);
+						callPrintMethod(result);
+					} catch (Exception e) {
+						result.error("Error on print", e.getMessage(), null);
+					}
+				} else {
+					result.error("Arguments are missed [list, qrCodePattern, barcodePattern]", null, null);
+				}
+			}
+
+			@Override
+			public void onError(String message) {
+				result.error("print", message, null);
+			}
+		});
+	}
+
+	/**
 	 * Invoke print method and set status of operation on result callback
 	 *
 	 * @param result - result for handler the status
@@ -228,7 +265,7 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	/**
 	 * Add a list of string to the printer buffer
 	 *
-	 * @param lines - linest to be printed
+	 * @param lines - lines to be printed
 	 * @throws RemoteException - if printer is not available
 	 */
 	private void addTextToPrinter(List<String> lines, String qrCodePattern, String barcodePattern, boolean printBarCode) throws RemoteException {
@@ -253,6 +290,19 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 				}
 			}
 		}
+	}
+
+	/**
+	 * Add a list of string to the printer buffer
+	 *
+	 * @param line - lines to be printed
+	 * @throws RemoteException - if printer is not available
+	 */
+	private void addLineToPrinter(String line, int alignMode) throws RemoteException {
+		PosDigital.getInstance().getPrinter().init();
+		PosDigital.getInstance().getPrinter().setGray(5);
+		PosDigital.getInstance().getPrinter().defineFontFormat(FontFormat.SMALL);
+		PosDigital.getInstance().getPrinter().addText(alignMode, line);
 	}
 
 	/**
