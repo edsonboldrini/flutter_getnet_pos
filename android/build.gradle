@@ -1,0 +1,44 @@
+group 'com.edsonboldrini.flutter_getnet_pos'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.3'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        flatDir {
+            dirs 'libs'
+            dirs project(':flutter_getnet_pos').file('libs')            
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 31
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 22
+    }
+}
+
+dependencies {
+    // implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation (name: 'libposdigital-1.7.1-7-release', ext: 'aar')
+}
