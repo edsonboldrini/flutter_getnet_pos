@@ -40,5 +40,5 @@ android {
 
 dependencies {
     // implementation fileTree(dir: 'libs', include: ['*.aar'])
-    implementation (name: 'libposdigital-1.7.1-7-release', ext: 'aar')
+    implementation (name: 'libposdigital-1.8.0-12-release', ext: 'aar')
 }
