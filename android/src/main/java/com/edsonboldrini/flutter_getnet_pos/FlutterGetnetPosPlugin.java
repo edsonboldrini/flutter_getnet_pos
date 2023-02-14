@@ -1,11 +1,11 @@
 package com.edsonboldrini.flutter_getnet_pos;
 
-import androidx.annotation.NonNull;
-
 import android.app.Application;
 import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.getnet.posdigital.PosDigital;
 import com.getnet.posdigital.camera.ICameraCallback;
@@ -31,16 +31,8 @@ import io.flutter.plugin.common.MethodChannel.Result;
  * FlutterGetnetPosPlugin
  */
 public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler {
-	/// The MethodChannel that will the communication between Flutter and native Android
-	///
-	/// This local reference serves to register the plugin with the Flutter Engine and unregister it
-	/// when the Flutter Engine is detached from the Activity
-	private MethodChannel methodChannel;
-
 	private static final String TAG = "FlutterGetnetPos";
 	private static final String NAMESPACE = "flutter_getnet_pos";
-	private FlutterPluginBinding pluginBinding;
-
 	private static final Logger LOGGER = Logger.getLogger(FlutterGetnetPosPlugin.class.getName());
 	private static final String QR_CODE_PATTERN = "qrCodePattern";
 	private static final String BARCODE_PATTERN = "barcodePattern";
@@ -48,6 +40,14 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	private static final String LIST = "list";
 	private static final String LINE = "line";
 	private static final String ALIGN = "align";
+	/// The MethodChannel that will the communication between Flutter and native
+	/// Android
+	///
+	/// This local reference serves to register the plugin with the Flutter Engine
+	/// and unregister it
+	/// when the Flutter Engine is detached from the Activity
+	private MethodChannel methodChannel;
+	private FlutterPluginBinding pluginBinding;
 	private Context context;
 
 	@Override
@@ -94,6 +94,13 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	@Override
 	public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
 		methodChannel.setMethodCallHandler(null);
+
+		try {
+			if (PosDigital.getInstance().isInitiated())
+				PosDigital.unregister(context);
+		} catch (Exception e) {
+			Log.e(TAG, "Exception on Activity Destroy");
+		}
 	}
 
 	private void setup(final BinaryMessenger messenger, final Application context) {
@@ -139,8 +146,12 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 			PosDigital.register(context, new PosDigital.BindCallback() {
 				@Override
 				public void onError(Exception e) {
-					LOGGER.log(Level.SEVERE, e.getMessage(), e);
 					callback.onError(e.getMessage());
+
+					if (PosDigital.getInstance().isInitiated()) {
+						PosDigital.unregister(context);
+					}
+					registerPosDigital(callback);
 				}
 
 				@Override
@@ -268,7 +279,8 @@ public class FlutterGetnetPosPlugin implements FlutterPlugin, MethodCallHandler 
 	 * @param lines - lines to be printed
 	 * @throws RemoteException - if printer is not available
 	 */
-	private void addTextToPrinter(List<String> lines, String qrCodePattern, String barcodePattern, boolean printBarCode) throws RemoteException {
+	private void addTextToPrinter(List<String> lines, String qrCodePattern, String barcodePattern, boolean printBarCode)
+			throws RemoteException {
 		PosDigital.getInstance().getPrinter().init();
 		PosDigital.getInstance().getPrinter().setGray(5);
 		PosDigital.getInstance().getPrinter().defineFontFormat(FontFormat.SMALL);
